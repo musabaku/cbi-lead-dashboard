@@ -9,6 +9,10 @@ const $ = id => document.getElementById(id);
 let ALL = [], sortKey = 'price_tl', sortDir = 1, activeDistricts = new Set();
 
 const fmt = n => (n == null || n === '') ? '—' : Number(n).toLocaleString('tr-TR');
+// escape ALL DB-sourced strings before innerHTML (anon can insert rows → stored-XSS guard)
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? esc(u) : '';
+const STATUSES = ['new','contacted','visited','appraised','rejected','won'];
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
 async function load(){
@@ -28,7 +32,7 @@ function buildDistrictChips(){
   const dists = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
   $('districtChips').innerHTML = dists.map(d=>{
     const cls = RED.includes(d)?'chip red':'chip';
-    return `<span class="${cls}" data-d="${d}">${d} <span class="muted">${counts[d]}</span></span>`;
+    return `<span class="${cls}" data-d="${esc(d)}">${esc(d)} <span class="muted">${counts[d]}</span></span>`;
   }).join('');
   document.querySelectorAll('#districtChips .chip').forEach(c=>{
     c.onclick=()=>{ const d=c.dataset.d; if(activeDistricts.has(d)){activeDistricts.delete(d);c.classList.remove('on');}else{activeDistricts.add(d);c.classList.add('on');} render(); };
@@ -36,7 +40,7 @@ function buildDistrictChips(){
 }
 function buildRoomsOptions(){
   const rs=[...new Set(ALL.map(r=>r.rooms).filter(Boolean))].sort();
-  $('rooms').innerHTML='<option value="">any</option>'+rs.map(r=>`<option>${r}</option>`).join('');
+  $('rooms').innerHTML='<option value="">any</option>'+rs.map(r=>`<option>${esc(r)}</option>`).join('');
 }
 
 function passes(r){
@@ -60,24 +64,27 @@ function render(){
   $('resultCount').textContent = rows.length;
   $('rows').innerHTML = rows.map(r=>{
     const tapuBad=/irtifak|hisseli|arsa/i.test(r.tapu_durumu||'');
-    const st=(r.status||'new');
+    const st = STATUSES.includes(r.status) ? r.status : 'new';      // sanitized to known set
+    const v = (r.verdict||'FLAG').replace(/[^A-Za-z]/g,'') || 'FLAG'; // safe for class + text
+    const id = String(r.id).replace(/[^0-9]/g,'');
+    const url = safeUrl(r.url);
     return `<tr>
-      <td><span class="badge b-${r.verdict||'FLAG'}">${r.verdict||'?'}</span></td>
-      <td>${r.district||'—'}${RED.includes(r.district)?' <span class="small" style="color:var(--danger)">⚠</span>':''}</td>
-      <td>${r.neighborhood||'—'}</td>
-      <td>${r.rooms||'—'}</td>
+      <td><span class="badge b-${v}">${esc(v)}</span></td>
+      <td>${esc(r.district)||'—'}${RED.includes(r.district)?' <span class="small" style="color:var(--danger)">⚠</span>':''}</td>
+      <td>${esc(r.neighborhood)||'—'}</td>
+      <td>${esc(r.rooms)||'—'}</td>
       <td class="num">${fmt(r.m2_net)}</td>
       <td class="num">${fmt(r.price_tl)}</td>
       <td class="num">$${fmt(r.usd)}</td>
-      <td>${r.building_age||'—'}</td>
-      <td>${r.floor||'—'}</td>
-      <td class="${tapuBad?'tapu-bad':'tapu-ok'}">${r.tapu_durumu||'—'}</td>
-      <td class="small">${r.iskan||'—'}</td>
-      <td class="small">${r.kimden||'—'}</td>
-      <td><select class="status st-${st}" data-id="${r.id}">
-        ${['new','contacted','visited','appraised','rejected','won'].map(s=>`<option ${s===st?'selected':''}>${s}</option>`).join('')}
+      <td>${esc(r.building_age)||'—'}</td>
+      <td>${esc(r.floor)||'—'}</td>
+      <td class="${tapuBad?'tapu-bad':'tapu-ok'}">${esc(r.tapu_durumu)||'—'}</td>
+      <td class="small">${esc(r.iskan)||'—'}</td>
+      <td class="small">${esc(r.kimden)||'—'}</td>
+      <td><select class="status st-${st}" data-id="${id}">
+        ${STATUSES.map(s=>`<option ${s===st?'selected':''}>${s}</option>`).join('')}
       </select></td>
-      <td>${r.url?`<a href="${r.url}" target="_blank">aç ↗</a>`:'—'}</td>
+      <td>${url?`<a href="${url}" target="_blank" rel="noopener noreferrer">aç ↗</a>`:'—'}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="14" class="muted" style="padding:24px;text-align:center">No listings match.</td></tr>`;
 
