@@ -14,6 +14,14 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&am
 const safeUrl = u => /^https?:\/\//i.test(u || '') ? esc(u) : '';
 const STATUSES = ['new','contacted','visited','appraised','rejected','won'];
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function getWriteToken(){
+  let token = localStorage.getItem('cbi_write_token') || '';
+  if(!token){
+    token = (prompt('Private CBI write token:') || '').trim();
+    if(token) localStorage.setItem('cbi_write_token', token);
+  }
+  return token;
+}
 
 async function load(){
   try{
@@ -91,13 +99,18 @@ function render(){
   document.querySelectorAll('select.status').forEach(sel=>{
     sel.onchange = async ()=>{
       const id=sel.dataset.id, status=sel.value;
+      const prev = (ALL.find(x=>String(x.id)===String(id)) || {}).status || 'new';
+      const token = getWriteToken();
+      if(!token){ sel.value = prev; toast('Write token required'); return; }
       sel.className='status st-'+status;
       try{
-        const r=await fetch(`${REST}?id=eq.${id}`,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
+        const r=await fetch(`${REST}?id=eq.${id}&select=id,status`,{method:'PATCH',headers:{...H,'x-cbi-write-token':token,Prefer:'return=representation'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
         if(!r.ok) throw new Error(await r.text());
+        const changed = await r.json();
+        if(!changed.length) throw new Error('No row updated. Check write token.');
         const row=ALL.find(x=>x.id==id); if(row) row.status=status;
         toast(`Saved: ${status}`); renderKpis();
-      }catch(e){ toast('Save failed'); }
+      }catch(e){ localStorage.removeItem('cbi_write_token'); sel.value = prev; sel.className='status st-'+prev; toast('Save failed: token?'); }
     };
   });
   renderKpis(rows);
