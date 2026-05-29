@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CBI Lead Dashboard — Türkiye $140k Top-Up</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏙️%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{
+    --surface:#fffcf6; --surface-2:#fff8ec; --line:#e4dac8; --text:#1f1b15; --muted:#6f6454;
+    --brand:#0a7f44; --danger:#c8352f; --amber:#b6781b; --shadow:0 12px 28px rgba(35,26,15,.08); --radius:16px;
+  }
+  *{box-sizing:border-box;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  body{margin:0;color:var(--text);
+    background:radial-gradient(circle at 8% 0%, #f9e8cc 0, #f2eee6 42%),radial-gradient(circle at 95% 90%, #ffe3be 0, #f2eee6 45%);
+    min-height:100vh;background-attachment:fixed}
+  a{color:var(--brand);text-decoration:none}
+  .hero{background:linear-gradient(122deg,#11472d,#227245);color:#fff;padding:26px 28px;box-shadow:var(--shadow)}
+  .hero h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.2px}
+  .hero p{margin:6px 0 0;font-size:13px;opacity:.85}
+  .wrap{max-width:1500px;margin:0 auto;padding:20px 24px 60px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:-44px 0 20px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi .v{font-size:26px;font-weight:800;color:var(--brand)}
+  .kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:2px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;margin-bottom:18px}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+  .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:5px}
+  .field input,.field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);font-size:13px;color:var(--text)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:12px;padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;user-select:none}
+  .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .chip.red.on{background:var(--danger);border-color:var(--danger)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+  .btn{padding:8px 14px;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:var(--brand);color:#fff}
+  .btn.ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{position:sticky;top:0;background:#11472d;color:#fff;padding:10px 8px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;white-space:nowrap}
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tbody tr:nth-child(even){background:var(--surface-2)}
+  tbody tr:hover{background:#fff3df}
+  .badge{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:8px;padding:2px 8px}
+  .b-KEEP{background:var(--brand)} .b-DROP{background:var(--danger)} .b-FLAG{background:var(--amber)}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tapu-ok{color:var(--brand);font-weight:600} .tapu-bad{color:var(--danger);font-weight:600}
+  select.status{padding:5px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;background:#fff}
+  .st-new{background:#fff} .st-contacted{background:#e7f0ff} .st-visited{background:#fff3df}
+  .st-appraised{background:#e9f7ef} .st-rejected{background:#fdecea} .st-won{background:#0a7f44;color:#fff}
+  .muted{color:var(--muted)} .small{font-size:11px}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#11472d;color:#fff;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow);opacity:0;transition:.3s;pointer-events:none;font-size:13px}
+  #toast.show{opacity:1}
+  .warn{font-size:11px;color:var(--danger);margin-top:6px}
+</style>
+</head>
+<body>
+  <div class="hero">
+    <h1>🏙️ CBI Lead Dashboard — Türkiye $140k Top-Up</h1>
+    <p>Live from Supabase · shop ₺6.3–7.8M (buffer over a $140k appraisal) · KEEP = kat mülkiyeti + iskan · edit status inline (auto-saves)</p>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="panel">
+      <div class="filters">
+        <div class="field"><label>Search (title / neighborhood / ilan no)</label><input id="q" placeholder="type…" /></div>
+        <div class="field"><label>Min price ₺</label><input id="pmin" type="number" placeholder="6300000" /></div>
+        <div class="field"><label>Max price ₺</label><input id="pmax" type="number" placeholder="7800000" /></div>
+        <div class="field"><label>Min net m²</label><input id="amin" type="number" placeholder="" /></div>
+        <div class="field"><label>Max net m²</label><input id="amax" type="number" placeholder="" /></div>
+        <div class="field"><label>Rooms</label><select id="rooms"><option value="">any</option></select></div>
+        <div class="field"><label>Verdict</label><select id="verdict"><option value="">any</option><option>KEEP</option><option>DROP</option><option>FLAG</option></select></div>
+        <div class="field"><label>Status</label><select id="status"><option value="">any</option><option>new</option><option>contacted</option><option>visited</option><option>appraised</option><option>rejected</option><option>won</option></select></div>
+      </div>
+      <div class="chips" id="districtChips"></div>
+      <div class="warn" id="warn"></div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div><b id="resultCount">…</b> <span class="muted">listings</span></div>
+        <div>
+          <button class="btn ghost" id="resetBtn">Reset filters</button>
+          <button class="btn" id="refreshBtn">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="overflow:auto;max-height:70vh">
+        <table id="tbl">
+          <thead><tr>
+            <th data-k="verdict">Verdict</th>
+            <th data-k="district">District</th>
+            <th data-k="neighborhood">Neighborhood</th>
+            <th data-k="rooms">Rooms</th>
+            <th data-k="m2_net" class="num">Net m²</th>
+            <th data-k="price_tl" class="num">Price ₺</th>
+            <th data-k="usd" class="num">~USD</th>
+            <th data-k="building_age">Age</th>
+            <th data-k="floor">Floor</th>
+            <th data-k="tapu_durumu">Tapu</th>
+            <th data-k="iskan">İskan</th>
+            <th data-k="kimden">Seller</th>
+            <th data-k="status">Status</th>
+            <th>Link</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
