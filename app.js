@@ -122,19 +122,17 @@ function render(){
     };
   });
 
-  // contacted checkbox → token-gated boolean write
+  // contacted checkbox → saves to Supabase (no token needed for updates), persists
   document.querySelectorAll('input.contacted').forEach(cb=>{
     cb.onchange = async ()=>{
       const id=cb.dataset.id, contacted=cb.checked;
-      const token = getWriteToken();
-      if(!token){ cb.checked=!contacted; toast('Write token required'); return; }
       try{
-        const r=await fetch(`${REST}?id=eq.${id}&select=id,contacted`,{method:'PATCH',headers:{...H,'x-cbi-write-token':token,Prefer:'return=representation'},body:JSON.stringify({contacted,updated_at:new Date().toISOString()})});
+        const r=await fetch(`${REST}?id=eq.${id}&select=id,contacted`,{method:'PATCH',headers:{...H,Prefer:'return=representation'},body:JSON.stringify({contacted,updated_at:new Date().toISOString()})});
         if(!r.ok) throw new Error(await r.text());
         if(!(await r.json()).length) throw new Error('no row');
         const row=ALL.find(x=>x.id==id); if(row) row.contacted=contacted;
         toast(contacted?'Marked contacted':'Unmarked'); renderKpis();
-      }catch(e){ localStorage.removeItem('cbi_write_token'); cb.checked=!contacted; toast('Save failed: token?'); }
+      }catch(e){ cb.checked=!contacted; toast('Save failed'); }
     };
   });
 
@@ -142,17 +140,14 @@ function render(){
     sel.onchange = async ()=>{
       const id=sel.dataset.id, status=sel.value;
       const prev = (ALL.find(x=>String(x.id)===String(id)) || {}).status || 'new';
-      const token = getWriteToken();
-      if(!token){ sel.value = prev; toast('Write token required'); return; }
       sel.className='status st-'+status;
       try{
-        const r=await fetch(`${REST}?id=eq.${id}&select=id,status`,{method:'PATCH',headers:{...H,'x-cbi-write-token':token,Prefer:'return=representation'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
+        const r=await fetch(`${REST}?id=eq.${id}&select=id,status`,{method:'PATCH',headers:{...H,Prefer:'return=representation'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
         if(!r.ok) throw new Error(await r.text());
-        const changed = await r.json();
-        if(!changed.length) throw new Error('No row updated. Check write token.');
+        if(!(await r.json()).length) throw new Error('no row');
         const row=ALL.find(x=>x.id==id); if(row) row.status=status;
         toast(`Saved: ${status}`); renderKpis();
-      }catch(e){ localStorage.removeItem('cbi_write_token'); sel.value = prev; sel.className='status st-'+prev; toast('Save failed: token?'); }
+      }catch(e){ sel.value = prev; sel.className='status st-'+prev; toast('Save failed'); }
     };
   });
   renderKpis(rows);
