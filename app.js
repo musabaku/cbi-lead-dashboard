@@ -109,13 +109,11 @@ function render(){
     b.onclick=()=>{
       const r=ALL.find(x=>String(x.id)===String(b.dataset.id)); if(!r) return;
       const loc=[r.district,r.neighborhood].filter(x=>x&&x!=='unknown').join(' / ');
-      const msg=`Merhaba, ${loc} ${r.rooms||''} ${r.m2_net?r.m2_net+'m² ':''}ilanınızı gördüm`+
-        (r.ilan_no?` (İlan No: ${r.ilan_no})`:'')+`. Kendim için Türk vatandaşlığına uygun, boş ve hemen taşınmaya hazır bir daire arıyorum.\n\nBirkaç sorum olacak:\n`+
-        `1) Tapu kat mülkiyetli mi, iskânı (yapı kullanma izni) var mı?\n`+
-        `2) Üzerinde ipotek/haciz/şerh var mı?\n`+
-        `3) Ekspertiz (değerleme) raporunda yaklaşık ne değer çıkar?\n`+
-        `4) Daire şu an boş mu, hemen taşınılabilir mi?\n\n`+
-        `Bütçem yaklaşık 6.3 milyon TL. Uygunsa detayları paylaşır mısınız? Teşekkürler.`;
+      const msg=`Merhaba, şu ilanınızı gördüm: ${r.url||''}\n`+
+        `${loc} ${r.rooms||''} ${r.m2_net?r.m2_net+'m²':''} — vatandaşlığa uygun, boş ve hemen taşınmaya hazır bir daire arıyorum (bütçe ~6.3M TL).\n`+
+        `• Tapu kat mülkiyetli mi, iskânı var mı?\n`+
+        `• Ekspertizde yaklaşık değeri ne olur?\n`+
+        `Uygunsa bilgi verir misiniz? Teşekkürler.`;
       navigator.clipboard.writeText(msg).then(()=>toast('Mesaj kopyalandı 📋')).catch(()=>toast('Kopyalanamadı'));
     };
   });
