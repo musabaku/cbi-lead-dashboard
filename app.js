@@ -110,9 +110,10 @@ function render(){
       const r=ALL.find(x=>String(x.id)===String(b.dataset.id)); if(!r) return;
       const loc=[r.district,r.neighborhood].filter(x=>x&&x!=='unknown').join(' / ');
       const msg=`Merhaba, şu ilanınızı gördüm: ${r.url||''}\n`+
-        `${loc} ${r.rooms||''} ${r.m2_net?r.m2_net+'m²':''} — vatandaşlığa uygun, boş ve hemen taşınmaya hazır bir daire arıyorum (bütçe ~6.3M TL).\n`+
+        `${loc} ${r.rooms||''} ${r.m2_net?r.m2_net+'m²':''} — Türk vatandaşlığına uygun, boş ve hemen taşınmaya hazır bir daire arıyorum (bütçe ~6.3M TL).\n`+
+        `Bizim için en önemlisi: SPK ekspertiz (değerleme) raporunda ve tapuda EN AZ ~140.000 USD (≈6.3M TL) değerin çıkması.\n`+
         `• Tapu kat mülkiyetli mi, iskânı var mı?\n`+
-        `• Ekspertizde yaklaşık değeri ne olur?\n`+
+        `• Ekspertizde bu değer (~140.000 USD) çıkar mı?\n`+
         `Uygunsa bilgi verir misiniz? Teşekkürler.`;
       navigator.clipboard.writeText(msg).then(()=>toast('Mesaj kopyalandı 📋')).catch(()=>toast('Kopyalanamadı'));
     };
