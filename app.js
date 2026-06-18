@@ -12,6 +12,9 @@ const fmt = n => (n == null || n === '') ? '—' : Number(n).toLocaleString('tr-
 // escape ALL DB-sourced strings before innerHTML (anon can insert rows → stored-XSS guard)
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const safeUrl = u => /^https?:\/\//i.test(u || '') ? esc(u) : '';
+const normTr = s => String(s || '').toLowerCase()
+  .replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i').replace(/i̇/g,'i')
+  .replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u');
 const STATUSES = ['new','contacted','visited','appraised','rejected','won'];
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function getWriteToken(){
@@ -71,7 +74,7 @@ function render(){
   rows.sort((a,b)=>{ let x=a[sortKey],y=b[sortKey]; if(typeof x==='number'||typeof y==='number'){x=+x||0;y=+y||0;} else {x=(x||'').toString();y=(y||'').toString();} return x<y?-sortDir:x>y?sortDir:0; });
   $('resultCount').textContent = rows.length;
   $('rows').innerHTML = rows.map(r=>{
-    const tapuBad=/irtifak|hisseli|arsa/i.test(r.tapu_durumu||'');
+    const tapuBad=/irtifak|hisseli|arsa pay/.test(normTr(r.tapu_durumu));
     const st = STATUSES.includes(r.status) ? r.status : 'new';      // sanitized to known set
     const v = (r.verdict||'FLAG').replace(/[^A-Za-z]/g,'') || 'FLAG'; // safe for class + text
     const id = String(r.id).replace(/[^0-9]/g,'');
