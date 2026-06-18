@@ -99,9 +99,26 @@ function render(){
         ${STATUSES.map(s=>`<option ${s===st?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td class="small">${added}</td>
+      <td style="text-align:center"><button class="copybtn" data-id="${id}" title="Mesajı kopyala">📋</button></td>
       <td>${url?`<a href="${url}" target="_blank" rel="noopener noreferrer">aç ↗</a>`:'—'}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="18" class="muted" style="padding:24px;text-align:center">No listings match.</td></tr>`;
+  }).join('') || `<tr><td colspan="19" class="muted" style="padding:24px;text-align:center">No listings match.</td></tr>`;
+
+  // 📋 copy a concise Turkish outreach message personalized to the listing
+  document.querySelectorAll('button.copybtn').forEach(b=>{
+    b.onclick=()=>{
+      const r=ALL.find(x=>String(x.id)===String(b.dataset.id)); if(!r) return;
+      const loc=[r.district,r.neighborhood].filter(x=>x&&x!=='unknown').join(' / ');
+      const msg=`Merhaba, ${loc} ${r.rooms||''} ${r.m2_net?r.m2_net+'m² ':''}ilanınızı gördüm`+
+        (r.ilan_no?` (İlan No: ${r.ilan_no})`:'')+`. Kendim için Türk vatandaşlığına uygun, boş ve hemen taşınmaya hazır bir daire arıyorum.\n\nBirkaç sorum olacak:\n`+
+        `1) Tapu kat mülkiyetli mi, iskânı (yapı kullanma izni) var mı?\n`+
+        `2) Üzerinde ipotek/haciz/şerh var mı?\n`+
+        `3) Ekspertiz (değerleme) raporunda yaklaşık ne değer çıkar?\n`+
+        `4) Daire şu an boş mu, hemen taşınılabilir mi?\n\n`+
+        `Bütçem yaklaşık 6.3 milyon TL. Uygunsa detayları paylaşır mısınız? Teşekkürler.`;
+      navigator.clipboard.writeText(msg).then(()=>toast('Mesaj kopyalandı 📋')).catch(()=>toast('Kopyalanamadı'));
+    };
+  });
 
   // contacted checkbox → token-gated boolean write
   document.querySelectorAll('input.contacted').forEach(cb=>{
